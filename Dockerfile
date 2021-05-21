@@ -19,4 +19,4 @@ RUN go build
 EXPOSE 8080
 
 # Run the executable
-# CMD [./limiter-consumer -threshold=5 -ttl=2"]
+CMD ["./limiter-consumer -threshold=5 -ttl=2"]
