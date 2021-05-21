@@ -14,7 +14,7 @@ import (
 
 var threshold =  flag.Int("threshold", 1, "request limit")
 var ttl  = flag.Int("ttl", 2, "time for a request ")
-var rateLimiter = limiter.NewUrlRateLimiter(*threshold,*ttl)git
+var rateLimiter = limiter.NewUrlRateLimiter(*threshold,*ttl)
 
 type MalformedRequest struct {
 	Status int
