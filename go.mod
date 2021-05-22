@@ -1,5 +1,5 @@
-module liranpi2/limiter/m/v0.1.1
+module github.com/liranpi2/consumer
 
 go 1.16
 
-require github.com/liranpi2/limiter v0.1.1
+require github.com/liranpi2/limiter v1.0.3

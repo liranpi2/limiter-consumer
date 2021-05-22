@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-var threshold =  flag.Int("threshold", 10, "request limit")
-var ttl  = flag.Int("ttl", 5, "time for a request ")
+var threshold =  flag.Int("threshold", 5, "request limit")
+var ttl  = flag.Int64("ttl", 3000, "time for a request ")
 var rateLimiter = limiter.NewUrlRateLimiter(*threshold,*ttl)
 
 type MalformedRequest struct {
@@ -89,10 +89,8 @@ func entryHandler(w http.ResponseWriter, r *http.Request) {
 	// find limiter for the specified url
 	limiter := rateLimiter.GetLimiter(endpoint.Url)
 
-	log.Printf("limiter: url: %s, limiter: key: %s, bucket: %d, last check: %d", endpoint.Url, limiter.Key, limiter.Bucket, limiter.LastCheck)
-
 	if !limiter.Accept() {
-		log.Printf("%s url blocked, bucket is %d", endpoint.Url, limiter.Bucket)
+		log.Printf("%s url blocked", endpoint.Url)
 
 		response := LimiterResult{Block: true}
 		prettyJSON, err := json.MarshalIndent(response, "", "    ")
