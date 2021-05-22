@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-var threshold =  flag.Int("threshold", 5, "request limit")
+var size =  flag.Int("size", 5, "request limit")
 var ttl  = flag.Int64("ttl", 3000, "time for a request ")
-var rateLimiter = limiter.NewUrlRateLimiter(*threshold,*ttl)
+var rateLimiter = limiter.NewUrlRateLimiter(*size,*ttl)
 
 type MalformedRequest struct {
 	Status int
@@ -42,9 +42,9 @@ func main() {
 
 	// init command args
 	flag.Parse()
-	log.Printf("consumer started with args: threshold: %d, ttl %d", *threshold, *ttl)
+	log.Printf("consumer started with args: threshold: %d, ttl %d", *size, *ttl)
 
-	fmt.Println("threshold:", *threshold)
+	fmt.Println("size:", *size)
 	fmt.Println("ttl:", *ttl)
 
 	// assign handlers
