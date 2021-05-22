@@ -93,9 +93,9 @@ func entryHandler(w http.ResponseWriter, r *http.Request) {
 	// find limiter for the specified url
 	limiter := rateLimiter.GetLimiter(endpoint.Url)
 
-	log.Printf("limiter: url: %s, bucket: %d, last check: %d", endpoint.Url, limiter.Bucket, limiter.LastCheck)
+	log.Printf("limiter: url: %s, limiter: key: %s, bucket: %d, last check: %d", endpoint.Url, limiter.Key, limiter.Bucket, limiter.LastCheck)
 
-	if !limiter.Accept(endpoint.Url) {
+	if !limiter.Accept() {
 		log.Printf("%s url blocked, bucket is %d", endpoint.Url, limiter.Bucket)
 
 		response := LimiterResult{Block: true}

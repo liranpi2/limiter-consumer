@@ -1,4 +1,4 @@
-module github.com/liranpi2/limiter-consumer
+module liranpi2/limiter/m/v0.1.1
 
 go 1.16
 
