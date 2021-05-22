@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -22,7 +23,7 @@ type MalformedRequest struct {
 }
 
 type Endpoint struct {
-	url string
+	Url string `json:"url""`
 }
 
 type LimiterResult struct {
@@ -31,11 +32,21 @@ type LimiterResult struct {
 
 func main() {
 
-	// set logger
-	//l4g.AddFilter("file", l4g.FINE, l4g.NewFileLogWriter("errors.log", false))
+	//jdata := `{"url" : "http://example.com"}`
+	//var endpoint Endpoint
+	//json.Unmarshal([]byte(jdata), &endpoint)
+
+	// creat logger
+	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+
+	if err != nil {
+		fmt.Println("init logger failed")
+	}
+	log.SetOutput(file)
 
 	// init command args
 	flag.Parse()
+	log.Printf("consumer started with args: threshold: %d, ttl %d", *threshold, *ttl)
 
 	fmt.Println("threshold:", *threshold)
 	fmt.Println("ttl:", *ttl)
@@ -56,42 +67,57 @@ func okHandler(w http.ResponseWriter, r *http.Request) {
 
 func entryHandler(w http.ResponseWriter, r *http.Request) {
 
-	var endpoint Endpoint
-	err := json.NewDecoder(r.Body).Decode(&endpoint)
-	// read postdata
-	//err := decodeJSONBody(w,r,&endpoint)
+	// check request method
+	if !requestValid(r) {
+		w.WriteHeader(405)
+		return
+	}
 
-	// validate
+	// check request body
+	var endpoint Endpoint
+	err := parseBody(w,r,&endpoint)
 	if err != nil {
 		var mr * MalformedRequest
 		if errors.As(err, &mr) {
 			http.Error(w, mr.Msg, mr.Status)
 		} else {
 			log.Println(err.Error())
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusBadRequest)
 		}
 		return
 	}
 
+	// log url
+	log.Printf("request from url: %s\n", endpoint.Url)
+
 	// find limiter for the specified url
-	limiter := rateLimiter.GetLimiter(endpoint.url)
-	if !limiter.Accept(endpoint.url) {
+	limiter := rateLimiter.GetLimiter(endpoint.Url)
+
+	log.Printf("limiter: url: %s, bucket: %d, last check: %d", endpoint.Url, limiter.Bucket, limiter.LastCheck)
+
+	if !limiter.Accept(endpoint.Url) {
+		log.Printf("%s url blocked, bucket is %d", endpoint.Url, limiter.Bucket)
+
 		response := LimiterResult{Block: true}
 		prettyJSON, err := json.MarshalIndent(response, "", "    ")
 		if err != nil {
 			log.Println("Failed to generate json", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
+
 		w.Write([]byte(string(prettyJSON)))
 	}
 }
-
 
 func (mr *MalformedRequest) Error() string {
 	return mr.Msg
 }
 
-func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+func requestValid(r *http.Request) bool  {
+	return r.Method == http.MethodPost
+}
+
+func parseBody(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
 
@@ -104,6 +130,7 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 		var unmarshalTypeError *json.UnmarshalTypeError
 
 		switch {
+
 		case errors.As(err, &syntaxError):
 			msg := fmt.Sprintf("malformed json at position %d", syntaxError.Offset)
 			return &MalformedRequest{Status: http.StatusBadRequest, Msg: msg}
