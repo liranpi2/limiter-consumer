@@ -42,7 +42,7 @@ func main() {
 
 	// init command args
 	flag.Parse()
-	log.Printf("consumer started with args: threshold: %d, ttl %d", *size, *ttl)
+	log.Printf("consumer started with args: size: %d, ttl %d", *size, *ttl)
 
 	fmt.Println("size:", *size)
 	fmt.Println("ttl:", *ttl)
