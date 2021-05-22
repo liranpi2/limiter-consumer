@@ -10,13 +10,11 @@ COPY . .
 # Download all the dependencies
 RUN go get -d -v ./...
 
-# Install the package
-# RUN go install -v ./...
+#build
+RUN go build -o ./out/consumer .
 
-RUN go build
-
-# This container exposes port 8080 to the outside world
+#exposes port 8080 to the outside world
 EXPOSE 8080
 
 # Run the executable
-# CMD ["limiter-consumer"]
+CMD ["./out/consumer"]

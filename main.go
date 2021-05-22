@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-var threshold =  flag.Int("threshold", 1, "request limit")
-var ttl  = flag.Int("ttl", 2, "time for a request ")
+var threshold =  flag.Int("threshold", 10, "request limit")
+var ttl  = flag.Int("ttl", 5, "time for a request ")
 var rateLimiter = limiter.NewUrlRateLimiter(*threshold,*ttl)
 
 type MalformedRequest struct {
@@ -31,10 +31,6 @@ type LimiterResult struct {
 }
 
 func main() {
-
-	//jdata := `{"url" : "http://example.com"}`
-	//var endpoint Endpoint
-	//json.Unmarshal([]byte(jdata), &endpoint)
 
 	// creat logger
 	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
